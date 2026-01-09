@@ -12,8 +12,8 @@ const CONFIG = {
   // URL format: https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit
   GOOGLE_SHEETS_ID: '1_KQfKLziIV7JhdVns-aQD6KsblzMkRmKdXDu-8tr5vo',
 
-  // Scopes needed for calendar and sheets access
-  GOOGLE_SCOPES: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/spreadsheets',
+  // Scopes needed for calendar, sheets, and user info
+  GOOGLE_SCOPES: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
 
   // App name shown in Google consent screen
   APP_NAME: 'Oloimina'
