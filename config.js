@@ -10,7 +10,7 @@ const CONFIG = {
 
   // Google Sheets ID for task storage (get from spreadsheet URL)
   // URL format: https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit
-  GOOGLE_SHEETS_ID: 'YOUR_SPREADSHEET_ID',
+  GOOGLE_SHEETS_ID: '1_KQfKLziIV7JhdVns-aQD6KsblzMkRmKdXDu-8tr5vo',
 
   // Scopes needed for calendar and sheets access
   GOOGLE_SCOPES: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/spreadsheets',
