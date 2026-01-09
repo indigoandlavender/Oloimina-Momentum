@@ -40,12 +40,13 @@ html, body {
 
 body {
   font-family: var(--font);
-  font-size: 14px;
-  line-height: 1.6;
-  letter-spacing: 0.01em;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
   background: var(--bg);
   color: var(--fg);
   -webkit-font-smoothing: antialiased;
+  font-weight: 300;
 }
 
 ::selection {
@@ -81,15 +82,15 @@ body {
 }
 
 .nav-btn {
-  padding: var(--space-sm) var(--space-md);
+  padding: 6px 12px;
   font-family: var(--font);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   background: transparent;
   border: none;
-  color: var(--fg-40);
+  color: var(--fg-30);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -113,8 +114,8 @@ body {
    ═══════════════════════════════════════════════════════════════ */
 
 .oloimina {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -122,9 +123,9 @@ body {
 }
 
 .oloimina-eye {
-  width: 14px;
-  height: 14px;
-  background: var(--fg);
+  width: 10px;
+  height: 10px;
+  background: var(--fg-40);
   border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
   position: relative;
   animation: breathe 5s ease-in-out infinite;
@@ -133,8 +134,8 @@ body {
 .oloimina-eye::after {
   content: '';
   position: absolute;
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   background: var(--bg);
   border-radius: 50%;
   top: 50%;
@@ -151,7 +152,7 @@ body {
 .oloimina.fading { opacity: 0.35; }
 .oloimina.fading .oloimina-eye { animation: none; }
 .oloimina.absent { opacity: 0.1; }
-.oloimina.absent .oloimina-eye { animation: none; height: 3px; }
+.oloimina.absent .oloimina-eye { animation: none; height: 2px; }
 
 /* ═══════════════════════════════════════════════════════════════
    VIEWS
@@ -173,17 +174,19 @@ body {
 }
 
 .view-header h1 {
-  font-size: 1.125rem;
+  font-size: 13px;
   font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--fg-70);
 }
 
 .add-task-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--fg);
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--fg-30);
   background: transparent;
-  color: var(--fg);
-  font-size: 20px;
+  color: var(--fg-40);
+  font-size: 16px;
   font-weight: 300;
   cursor: pointer;
   display: flex;
@@ -193,8 +196,8 @@ body {
 }
 
 .add-task-btn:hover {
-  background: var(--fg);
-  color: var(--bg);
+  border-color: var(--fg);
+  color: var(--fg);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -209,11 +212,11 @@ body {
 }
 
 .cal-nav-btn {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: none;
   background: transparent;
-  color: var(--fg-40);
+  color: var(--fg-20);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -222,13 +225,13 @@ body {
 }
 
 .cal-nav-btn:hover {
-  color: var(--fg);
+  color: var(--fg-70);
 }
 
 .cal-title {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
   color: var(--fg-70);
 }
 
@@ -238,28 +241,28 @@ body {
 
 .cal-grid {
   background: var(--card);
-  padding: var(--space-lg);
+  padding: var(--space-md);
 }
 
 .cal-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-xs);
 }
 
 .cal-header span {
   text-align: center;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.15em;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--fg-30);
+  color: var(--fg-20);
 }
 
 .cal-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
+  gap: 0;
 }
 
 .cal-day {
@@ -267,8 +270,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  color: var(--fg-70);
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--fg-40);
   cursor: pointer;
   position: relative;
   transition: all 0.15s ease;
@@ -279,13 +283,13 @@ body {
 }
 
 .cal-day.other-month {
-  color: var(--fg-20);
+  color: var(--fg-10);
 }
 
 .cal-day.today {
   background: var(--fg);
   color: var(--bg);
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .cal-day.has-tasks::after {
@@ -337,21 +341,21 @@ body {
 }
 
 .week-day-header {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 9px;
+  font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--fg-30);
+  color: var(--fg-20);
   margin-bottom: 2px;
 }
 
 .week-day-number {
-  font-size: 1.25rem;
+  font-size: 14px;
   font-weight: 300;
-  color: var(--fg-70);
+  color: var(--fg-40);
   margin-bottom: var(--space-sm);
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -364,11 +368,11 @@ body {
 }
 
 .week-task {
-  font-size: 11px;
-  padding: 3px 6px;
+  font-size: 10px;
+  padding: 2px 5px;
   margin-bottom: 2px;
   background: var(--fg-05);
-  color: var(--fg-70);
+  color: var(--fg-40);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -400,26 +404,26 @@ body {
 }
 
 .agenda-day-header {
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 9px;
+  font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--fg-30);
-  margin-bottom: var(--space-md);
+  color: var(--fg-20);
+  margin-bottom: var(--space-sm);
 }
 
 .agenda-day.today .agenda-day-header {
-  color: var(--fg);
+  color: var(--fg-70);
 }
 
 .agenda-tasks {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: 4px;
 }
 
 .agenda-task {
-  padding: var(--space-sm) var(--space-md);
+  padding: 8px 12px;
   background: var(--card);
   cursor: pointer;
   transition: background 0.15s ease;
@@ -430,20 +434,20 @@ body {
 }
 
 .agenda-task-title {
-  font-size: 14px;
-  color: var(--fg);
+  font-size: 11px;
+  color: var(--fg-70);
 }
 
 .agenda-task-meta {
-  font-size: 11px;
-  color: var(--fg-40);
+  font-size: 9px;
+  color: var(--fg-30);
   margin-top: 2px;
 }
 
 .agenda-empty {
-  font-size: 13px;
-  color: var(--fg-30);
-  font-style: italic;
+  font-size: 11px;
+  color: var(--fg-20);
+  font-style: normal;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -455,10 +459,10 @@ body {
 }
 
 .task-item {
-  padding: var(--space-md) 0;
+  padding: 10px 0;
   display: flex;
   align-items: flex-start;
-  gap: var(--space-md);
+  gap: 12px;
   border-bottom: 1px solid var(--fg-05);
 }
 
@@ -467,10 +471,10 @@ body {
 }
 
 .task-checkbox {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   margin-top: 1px;
-  border: 1px solid var(--fg-40);
+  border: 1px solid var(--fg-20);
   background: transparent;
   cursor: pointer;
   flex-shrink: 0;
@@ -481,7 +485,7 @@ body {
 }
 
 .task-checkbox:hover {
-  border-color: var(--fg);
+  border-color: var(--fg-40);
 }
 
 .task-checkbox.checked {
@@ -491,9 +495,9 @@ body {
 
 .task-checkbox.checked::after {
   content: '';
-  width: 10px;
-  height: 5px;
-  border: 2px solid var(--bg);
+  width: 8px;
+  height: 4px;
+  border: 1.5px solid var(--bg);
   border-top: none;
   border-right: none;
   transform: rotate(-45deg) translateY(-1px);
@@ -514,9 +518,9 @@ body {
 }
 
 .task-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 400;
-  color: var(--fg);
+  color: var(--fg-70);
   transition: opacity 0.15s ease;
 }
 
@@ -526,11 +530,11 @@ body {
 }
 
 .task-meta {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--fg-40);
+  color: var(--fg-30);
   margin-top: 2px;
 }
 
@@ -539,8 +543,8 @@ body {
 }
 
 .task-time {
-  font-size: 11px;
-  color: var(--fg-40);
+  font-size: 10px;
+  color: var(--fg-30);
   margin-left: auto;
   flex-shrink: 0;
 }
@@ -550,8 +554,9 @@ body {
   display: block;
   padding: var(--space-xl) 0;
   text-align: center;
-  font-size: 13px;
-  color: var(--fg-30);
+  font-size: 11px;
+  color: var(--fg-20);
+  font-weight: 300;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -562,23 +567,24 @@ body {
   position: fixed;
   inset: 0;
   width: 100%;
-  max-width: 440px;
+  max-width: 380px;
   margin: auto;
   padding: var(--space-lg);
   background: var(--bg);
-  border: 1px solid var(--fg-10);
+  border: none;
   color: var(--fg);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
 }
 
 .task-modal::backdrop {
-  background: rgba(26, 26, 26, 0.4);
+  background: rgba(26, 26, 26, 0.3);
 }
 
 .task-title-input {
   width: 100%;
-  padding: var(--space-md) 0;
+  padding: 12px 0;
   font-family: var(--font);
-  font-size: 1rem;
+  font-size: 13px;
   font-weight: 400;
   background: transparent;
   border: none;
@@ -589,29 +595,29 @@ body {
 }
 
 .task-title-input::placeholder {
-  color: var(--fg-30);
+  color: var(--fg-20);
 }
 
 .task-title-input:focus {
-  border-color: var(--fg);
+  border-color: var(--fg-30);
 }
 
 .task-note-input {
   width: 100%;
   padding: var(--space-sm);
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 11px;
   line-height: 1.6;
   background: var(--fg-05);
   border: none;
-  color: var(--fg);
+  color: var(--fg-70);
   outline: none;
   resize: vertical;
   margin-bottom: var(--space-md);
 }
 
 .task-note-input::placeholder {
-  color: var(--fg-30);
+  color: var(--fg-20);
 }
 
 .task-form-row {
@@ -628,28 +634,29 @@ body {
 }
 
 .form-label span {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 9px;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--fg-40);
+  color: var(--fg-30);
 }
 
 .form-input,
 .form-select {
-  padding: var(--space-sm);
+  padding: 6px 8px;
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 11px;
+  font-weight: 300;
   background: var(--card);
   border: 1px solid var(--fg-10);
-  color: var(--fg);
+  color: var(--fg-70);
   cursor: pointer;
   outline: none;
 }
 
 .form-input:focus,
 .form-select:focus {
-  border-color: var(--fg);
+  border-color: var(--fg-30);
 }
 
 .task-form-actions {
@@ -665,37 +672,34 @@ body {
 }
 
 .btn {
-  padding: var(--space-sm) var(--space-md);
+  padding: 10px 20px;
   font-family: var(--font);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  border: 1px solid var(--fg);
+  border: none;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .btn-cancel {
   background: transparent;
-  color: var(--fg-40);
-  border-color: var(--fg-20);
+  color: var(--fg-30);
 }
 
 .btn-cancel:hover {
-  border-color: var(--fg);
-  color: var(--fg);
+  color: var(--fg-70);
 }
 
 .btn-save {
-  background: var(--fg);
-  border-color: var(--fg);
-  color: var(--bg);
+  background: var(--fg-10);
+  color: var(--fg-40);
 }
 
 .btn-save:hover {
-  background: transparent;
-  color: var(--fg);
+  background: var(--fg);
+  color: var(--bg);
 }
 
 .btn-secondary {
@@ -716,13 +720,13 @@ body {
 .context-menu {
   position: fixed;
   background: var(--card);
-  border: 1px solid var(--fg-10);
-  padding: var(--space-xs);
+  border: none;
+  padding: 4px;
   display: none;
   flex-direction: column;
-  min-width: 160px;
+  min-width: 140px;
   z-index: 100;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .context-menu.visible {
@@ -730,13 +734,13 @@ body {
 }
 
 .context-menu button {
-  padding: var(--space-sm) var(--space-md);
+  padding: 8px 12px;
   font-family: var(--font);
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 11px;
+  font-weight: 300;
   background: transparent;
   border: none;
-  color: var(--fg);
+  color: var(--fg-70);
   cursor: pointer;
   text-align: left;
   transition: background 0.15s ease;
@@ -762,11 +766,11 @@ body {
 }
 
 .sync-btn {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border: none;
   background: transparent;
-  color: var(--fg-40);
+  color: var(--fg-20);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -775,7 +779,7 @@ body {
 }
 
 .sync-btn:hover {
-  color: var(--fg);
+  color: var(--fg-40);
 }
 
 .sync-btn.syncing {
@@ -795,21 +799,21 @@ body {
 .google-btn {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
-  border: 1px solid var(--fg-20);
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid var(--fg-10);
   background: transparent;
-  color: var(--fg-70);
+  color: var(--fg-30);
   font-family: var(--font);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .google-btn:hover {
-  border-color: var(--fg);
-  color: var(--fg);
+  border-color: var(--fg-30);
+  color: var(--fg-70);
 }
 
 .google-btn.signed-in {
@@ -818,27 +822,27 @@ body {
 }
 
 .google-icon {
-  font-weight: 600;
-  font-size: 12px;
+  font-weight: 500;
+  font-size: 10px;
 }
 
 .form-checkbox {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 6px;
   cursor: pointer;
 }
 
 .form-checkbox input {
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   accent-color: var(--fg);
   cursor: pointer;
 }
 
 .form-checkbox span {
-  font-size: 12px;
-  color: var(--fg-70);
+  font-size: 10px;
+  color: var(--fg-40);
 }
 
 .task-form-actions-left {
@@ -861,10 +865,11 @@ body {
 }
 
 .toast {
-  padding: var(--space-sm) var(--space-md);
+  padding: 8px 14px;
   background: var(--fg);
   color: var(--bg);
-  font-size: 13px;
+  font-size: 11px;
+  font-weight: 300;
   animation: slideIn 0.3s ease;
 }
 
@@ -893,11 +898,11 @@ body {
 .task-item.synced .task-title::after {
   content: '';
   display: inline-block;
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   background: #34a853;
   border-radius: 50%;
-  margin-left: var(--space-sm);
+  margin-left: 6px;
   vertical-align: middle;
 }
 
