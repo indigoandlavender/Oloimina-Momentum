@@ -1,4 +1,4 @@
-// Google Calendar API Configuration
+// Google API Configuration
 // Fill in your credentials from Google Cloud Console
 
 const CONFIG = {
@@ -8,8 +8,12 @@ const CONFIG = {
   // Calendar ID to sync with (usually 'primary' for main calendar)
   GOOGLE_CALENDAR_ID: 'primary',
 
-  // Scopes needed for calendar access
-  GOOGLE_SCOPES: 'https://www.googleapis.com/auth/calendar.events',
+  // Google Sheets ID for task storage (get from spreadsheet URL)
+  // URL format: https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit
+  GOOGLE_SHEETS_ID: 'YOUR_SPREADSHEET_ID',
+
+  // Scopes needed for calendar and sheets access
+  GOOGLE_SCOPES: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/spreadsheets',
 
   // App name shown in Google consent screen
   APP_NAME: 'Oloimina'

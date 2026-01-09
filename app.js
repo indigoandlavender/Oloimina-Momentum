@@ -1,6 +1,6 @@
 // Oloimina - Momentum
 // A ritual of motion, not a productivity tool.
-// With two-way Google Calendar sync
+// With Google Sheets sync and Google Calendar integration
 
 (function() {
   'use strict';
@@ -150,7 +150,7 @@
   function initGoogleAPI() {
     // Check if config is set
     if (!CONFIG || CONFIG.GOOGLE_CLIENT_ID === 'YOUR_CLIENT_ID.apps.googleusercontent.com') {
-      console.log('Google Calendar not configured. Edit config.js to enable sync.');
+      console.log('Google APIs not configured. Edit config.js to enable sync.');
       dom.googleBtn.style.display = 'none';
       dom.syncBtn.style.display = 'none';
       return;
@@ -160,7 +160,10 @@
     if (typeof gapi !== 'undefined') {
       gapi.load('client', async () => {
         await gapi.client.init({
-          discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+          discoveryDocs: [
+            'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest',
+            'https://sheets.googleapis.com/$discovery/rest?version=v4'
+          ],
         });
         gapiInited = true;
         maybeEnableButtons();
@@ -172,7 +175,7 @@
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CONFIG.GOOGLE_CLIENT_ID,
         scope: CONFIG.GOOGLE_SCOPES,
-        callback: (response) => {
+        callback: async (response) => {
           if (response.error) {
             console.error('Auth error:', response);
             showToast('Sign in failed', 'error');
@@ -182,6 +185,11 @@
           isSignedIn = true;
           updateAuthUI();
           showToast('Signed in to Google', 'success');
+
+          // Auto-sync from sheets on sign in
+          if (CONFIG.GOOGLE_SHEETS_ID && CONFIG.GOOGLE_SHEETS_ID !== 'YOUR_SPREADSHEET_ID') {
+            await syncFromSheets();
+          }
         },
       });
       gisInited = true;
@@ -233,11 +241,21 @@
     dom.syncBtn.disabled = true;
 
     try {
-      // Pull events from Google
+      // First sync from sheets (cloud storage)
+      if (CONFIG.GOOGLE_SHEETS_ID && CONFIG.GOOGLE_SHEETS_ID !== 'YOUR_SPREADSHEET_ID') {
+        await syncFromSheets();
+      }
+
+      // Pull events from Google Calendar
       await pullFromGoogle();
 
-      // Push local tasks to Google
+      // Push local tasks to Google Calendar
       await pushToGoogle();
+
+      // Sync back to sheets
+      if (CONFIG.GOOGLE_SHEETS_ID && CONFIG.GOOGLE_SHEETS_ID !== 'YOUR_SPREADSHEET_ID') {
+        await syncToSheets();
+      }
 
       state.lastSync = Date.now();
       save();
@@ -553,6 +571,170 @@
     }
   }
 
+  // --- Google Sheets Sync ---
+  const SHEET_HEADERS = ['id', 'title', 'note', 'context', 'owner', 'state', 'startDate', 'startTime', 'endDate', 'endTime', 'repeat', 'reminder', 'syncToGoogle', 'googleEventId', 'createdAt', 'updatedAt'];
+
+  async function initSheet() {
+    if (!CONFIG.GOOGLE_SHEETS_ID || CONFIG.GOOGLE_SHEETS_ID === 'YOUR_SPREADSHEET_ID') {
+      return false;
+    }
+
+    try {
+      // Check if sheet has headers
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: CONFIG.GOOGLE_SHEETS_ID,
+        range: 'A1:P1'
+      });
+
+      const values = response.result.values;
+      if (!values || values.length === 0 || values[0][0] !== 'id') {
+        // Initialize headers
+        await gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId: CONFIG.GOOGLE_SHEETS_ID,
+          range: 'A1:P1',
+          valueInputOption: 'RAW',
+          resource: { values: [SHEET_HEADERS] }
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error('Failed to init sheet:', error);
+      return false;
+    }
+  }
+
+  async function syncFromSheets() {
+    if (!isSignedIn || !CONFIG.GOOGLE_SHEETS_ID || CONFIG.GOOGLE_SHEETS_ID === 'YOUR_SPREADSHEET_ID') {
+      return;
+    }
+
+    dom.syncBtn.classList.add('syncing');
+
+    try {
+      await initSheet();
+
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: CONFIG.GOOGLE_SHEETS_ID,
+        range: 'A2:P1000'
+      });
+
+      const rows = response.result.values || [];
+      if (rows.length === 0) {
+        // Sheet is empty, push local tasks
+        await syncToSheets();
+        return;
+      }
+
+      // Convert rows to tasks
+      const sheetTasks = rows.map(row => ({
+        id: row[0] || '',
+        title: row[1] || '',
+        note: row[2] || '',
+        context: row[3] || 'Digital',
+        owner: row[4] || 'Me',
+        state: row[5] || 'Active',
+        startDate: row[6] || null,
+        startTime: row[7] || null,
+        endDate: row[8] || null,
+        endTime: row[9] || null,
+        repeat: row[10] || 'none',
+        reminder: row[11] || 'none',
+        syncToGoogle: row[12] === 'true',
+        googleEventId: row[13] || null,
+        createdAt: parseInt(row[14]) || Date.now(),
+        updatedAt: parseInt(row[15]) || Date.now()
+      })).filter(t => t.id && t.title);
+
+      // Merge with local tasks - sheet is source of truth
+      const sheetTaskIds = new Set(sheetTasks.map(t => t.id));
+      const localOnlyTasks = state.tasks.filter(t => !sheetTaskIds.has(t.id));
+
+      // Keep local tasks that don't exist in sheet (newly created offline)
+      state.tasks = [...sheetTasks];
+
+      // Add back local-only tasks and sync them
+      for (const localTask of localOnlyTasks) {
+        state.tasks.push(localTask);
+      }
+
+      save();
+      render();
+
+      // Push back any local-only tasks
+      if (localOnlyTasks.length > 0) {
+        await syncToSheets();
+      }
+
+      showToast('Synced from cloud', 'success');
+    } catch (error) {
+      console.error('Sheets sync error:', error);
+      showToast('Sync failed: ' + error.message, 'error');
+    } finally {
+      dom.syncBtn.classList.remove('syncing');
+    }
+  }
+
+  async function syncToSheets() {
+    if (!isSignedIn || !CONFIG.GOOGLE_SHEETS_ID || CONFIG.GOOGLE_SHEETS_ID === 'YOUR_SPREADSHEET_ID') {
+      return;
+    }
+
+    try {
+      await initSheet();
+
+      // Convert tasks to rows
+      const rows = state.tasks.map(task => [
+        task.id,
+        task.title,
+        task.note || '',
+        task.context || 'Digital',
+        task.owner || 'Me',
+        task.state || 'Active',
+        task.startDate || '',
+        task.startTime || '',
+        task.endDate || '',
+        task.endTime || '',
+        task.repeat || 'none',
+        task.reminder || 'none',
+        task.syncToGoogle ? 'true' : 'false',
+        task.googleEventId || '',
+        task.createdAt ? task.createdAt.toString() : '',
+        task.updatedAt ? task.updatedAt.toString() : ''
+      ]);
+
+      // Clear existing data and write new
+      await gapi.client.sheets.spreadsheets.values.clear({
+        spreadsheetId: CONFIG.GOOGLE_SHEETS_ID,
+        range: 'A2:P1000'
+      });
+
+      if (rows.length > 0) {
+        await gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId: CONFIG.GOOGLE_SHEETS_ID,
+          range: 'A2:P' + (rows.length + 1),
+          valueInputOption: 'RAW',
+          resource: { values: rows }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to sync to sheets:', error);
+      throw error;
+    }
+  }
+
+  // Debounced sheets sync
+  let sheetsSyncTimeout = null;
+  function scheduleSheetsSync() {
+    if (!isSignedIn || !CONFIG.GOOGLE_SHEETS_ID || CONFIG.GOOGLE_SHEETS_ID === 'YOUR_SPREADSHEET_ID') {
+      return;
+    }
+
+    if (sheetsSyncTimeout) clearTimeout(sheetsSyncTimeout);
+    sheetsSyncTimeout = setTimeout(() => {
+      syncToSheets().catch(err => console.error('Background sync failed:', err));
+    }, 2000);
+  }
+
   // --- Task Operations ---
   function createTask(data) {
     const task = {
@@ -576,8 +758,9 @@
     state.tasks.unshift(task);
     recordMovement();
     save();
+    scheduleSheetsSync();
 
-    // Sync to Google if requested
+    // Sync to Google Calendar if requested
     if (task.syncToGoogle && isSignedIn) {
       syncSingleTask(task);
     }
@@ -598,6 +781,7 @@
 
     recordMovement();
     save();
+    scheduleSheetsSync();
     return task;
   }
 
@@ -612,6 +796,7 @@
       state.tasks.splice(index, 1);
       recordMovement();
       save();
+      scheduleSheetsSync();
     }
   }
 
@@ -625,6 +810,7 @@
     }
     recordMovement();
     save();
+    scheduleSheetsSync();
     render();
   }
 
