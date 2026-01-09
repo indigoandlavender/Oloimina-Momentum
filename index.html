@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oloimina</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <nav class="nav">
+        <button class="nav-btn active" data-view="today">Today</button>
+        <button class="nav-btn" data-view="month">Month</button>
+        <button class="nav-btn" data-view="week">Week</button>
+        <button class="nav-btn" data-view="agenda">Agenda</button>
+      </nav>
+      <div class="header-right">
+        <div class="sync-status" id="syncStatus">
+          <button class="sync-btn" id="syncBtn" title="Sync with Google Calendar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+            </svg>
+          </button>
+          <button class="google-btn" id="googleBtn">
+            <span class="google-icon">G</span>
+            <span id="googleBtnText">Sign in</span>
+          </button>
+        </div>
+        <div class="oloimina" id="oloimina">
+          <div class="oloimina-eye"></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Today View -->
+      <section class="view view-today active" id="viewToday">
+        <div class="view-header">
+          <h1 id="todayDate"></h1>
+          <button class="add-task-btn" id="addTaskBtn" aria-label="Add task">+</button>
+        </div>
+        <ul class="task-list" id="taskList"></ul>
+      </section>
+
+      <!-- Month View -->
+      <section class="view view-month" id="viewMonth">
+        <div class="calendar-nav">
+          <button class="cal-nav-btn" id="monthPrev">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </button>
+          <span class="cal-title" id="monthTitle"></span>
+          <button class="cal-nav-btn" id="monthNext">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-header">
+            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+          </div>
+          <div class="cal-days" id="monthDays"></div>
+        </div>
+      </section>
+
+      <!-- Week View -->
+      <section class="view view-week" id="viewWeek">
+        <div class="calendar-nav">
+          <button class="cal-nav-btn" id="weekPrev">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </button>
+          <span class="cal-title" id="weekTitle"></span>
+          <button class="cal-nav-btn" id="weekNext">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+        </div>
+        <div class="week-grid" id="weekGrid"></div>
+      </section>
+
+      <!-- Agenda View -->
+      <section class="view view-agenda" id="viewAgenda">
+        <div class="calendar-nav">
+          <button class="cal-nav-btn" id="agendaPrev">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </button>
+          <span class="cal-title" id="agendaTitle"></span>
+          <button class="cal-nav-btn" id="agendaNext">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+        </div>
+        <div class="agenda-list" id="agendaList"></div>
+      </section>
+    </main>
+
+    <!-- Task Modal -->
+    <dialog class="task-modal" id="taskModal">
+      <form class="task-form" id="taskForm">
+        <input
+          type="text"
+          name="title"
+          placeholder="What needs to move?"
+          class="task-title-input"
+          required
+          autocomplete="off"
+        >
+        <textarea
+          name="note"
+          placeholder="Note (optional)"
+          class="task-note-input"
+          rows="2"
+        ></textarea>
+
+        <div class="task-form-row">
+          <label class="form-label">
+            <span>Start Date</span>
+            <input type="date" name="startDate" class="form-input" required>
+          </label>
+          <label class="form-label">
+            <span>Start Time</span>
+            <input type="time" name="startTime" class="form-input">
+          </label>
+        </div>
+
+        <div class="task-form-row">
+          <label class="form-label">
+            <span>End Date</span>
+            <input type="date" name="endDate" class="form-input">
+          </label>
+          <label class="form-label">
+            <span>End Time</span>
+            <input type="time" name="endTime" class="form-input">
+          </label>
+        </div>
+
+        <div class="task-form-row">
+          <label class="form-label">
+            <span>Repeat</span>
+            <select name="repeat" class="form-select">
+              <option value="none">No repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Every 2 weeks</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </label>
+          <label class="form-label">
+            <span>Reminder</span>
+            <select name="reminder" class="form-select">
+              <option value="none">No reminder</option>
+              <option value="0">At time of event</option>
+              <option value="5">5 minutes before</option>
+              <option value="15">15 minutes before</option>
+              <option value="30">30 minutes before</option>
+              <option value="60">1 hour before</option>
+              <option value="1440">1 day before</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="task-form-row">
+          <label class="form-label">
+            <span>Context</span>
+            <select name="context" class="form-select">
+              <option value="Digital">Digital</option>
+              <option value="Riad">Riad</option>
+              <option value="Annex">Annex</option>
+              <option value="Personal">Personal</option>
+            </select>
+          </label>
+
+          <label class="form-label">
+            <span>Owner</span>
+            <select name="owner" class="form-select">
+              <option value="Me">Me</option>
+              <option value="Zahra">Zahra</option>
+              <option value="AI">AI</option>
+            </select>
+          </label>
+        </div>
+
+        <input type="hidden" name="id" value="">
+        <input type="hidden" name="googleEventId" value="">
+
+        <div class="task-form-actions">
+          <div class="task-form-actions-left">
+            <label class="form-checkbox">
+              <input type="checkbox" name="syncToGoogle" id="syncToGoogle">
+              <span>Sync to Google</span>
+            </label>
+          </div>
+          <div class="task-form-actions-right">
+            <button type="button" class="btn btn-cancel" id="cancelBtn">Cancel</button>
+            <button type="submit" class="btn btn-save">Save</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Task Context Menu -->
+    <div class="context-menu" id="contextMenu">
+      <button data-action="edit">Edit</button>
+      <button data-action="sync">Sync to Google</button>
+      <button data-action="waiting">Waiting</button>
+      <button data-action="parked">Park</button>
+      <button data-action="delete" class="danger">Delete</button>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
