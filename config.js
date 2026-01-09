@@ -3,7 +3,7 @@
 
 const CONFIG = {
   // Get this from: https://console.cloud.google.com/apis/credentials
-  GOOGLE_CLIENT_ID: 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+  GOOGLE_CLIENT_ID: '667787303898-6co0icjicbtojt7i9gff2p7inh6ll7kh.apps.googleusercontent.com',
 
   // Calendar ID to sync with (usually 'primary' for main calendar)
   GOOGLE_CALENDAR_ID: 'primary',
