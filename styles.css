@@ -470,10 +470,45 @@ body {
   align-items: flex-start;
   gap: 12px;
   border-bottom: 1px solid var(--fg-05);
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .task-item:last-child {
   border-bottom: none;
+}
+
+.task-item.dragging {
+  opacity: 0.4;
+}
+
+.task-item.drop-above {
+  border-top: 2px solid var(--accent);
+  padding-top: 8px;
+}
+
+.task-item.drop-below {
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 8px;
+}
+
+.drag-handle {
+  color: var(--fg-15);
+  cursor: grab;
+  font-size: 10px;
+  letter-spacing: -2px;
+  user-select: none;
+  padding: 2px 0;
+  margin-left: -4px;
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.drag-handle:hover {
+  color: var(--fg-40);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }
 
 .task-checkbox {

@@ -619,7 +619,7 @@
   }
 
   // --- Google Sheets Sync ---
-  const SHEET_HEADERS = ['id', 'title', 'note', 'project', 'owner', 'assignedBy', 'state', 'startDate', 'startTime', 'endDate', 'endTime', 'repeat', 'reminder', 'syncToGoogle', 'googleEventId', 'createdAt', 'updatedAt'];
+  const SHEET_HEADERS = ['id', 'title', 'note', 'project', 'owner', 'assignedBy', 'state', 'startDate', 'startTime', 'endDate', 'endTime', 'repeat', 'reminder', 'syncToGoogle', 'googleEventId', 'createdAt', 'updatedAt', 'order'];
 
   async function initSheet() {
     if (!CONFIG.GOOGLE_SHEETS_ID || CONFIG.GOOGLE_SHEETS_ID === 'YOUR_SPREADSHEET_ID') {
@@ -794,6 +794,9 @@
     const project = (data.project || '').trim() || 'General';
     addProject(project);
 
+    // Find the highest order for this date to put new task at top
+    const maxOrder = state.tasks.reduce((max, t) => Math.max(max, t.order || 0), 0);
+
     const task = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       title: data.title.trim(),
@@ -811,7 +814,8 @@
       syncToGoogle: data.syncToGoogle || false,
       googleEventId: null,
       createdAt: Date.now(),
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      order: maxOrder + 1
     };
     state.tasks.unshift(task);
     recordMovement();
@@ -1013,6 +1017,11 @@
       // For today/future, show tasks that start on or before that date
       return start <= d;
     }).sort((a, b) => {
+      // Sort by manual order (higher order = further down)
+      const orderA = a.order || 0;
+      const orderB = b.order || 0;
+      if (orderA !== orderB) return orderA - orderB;
+      // Fall back to time-based sorting
       if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
       if (a.startTime) return -1;
       if (b.startTime) return 1;
@@ -1039,7 +1048,8 @@
     }
 
     return `
-      <li class="task-item ${stateClass} ${syncedClass}" data-id="${task.id}">
+      <li class="task-item ${stateClass} ${syncedClass}" data-id="${task.id}" draggable="true">
+        <div class="drag-handle" data-id="${task.id}">⋮⋮</div>
         <div class="task-checkbox ${isChecked ? 'checked' : ''}" data-id="${task.id}"></div>
         <div class="task-content" data-id="${task.id}">
           <div class="task-title">${escapeHtml(task.title)}</div>
@@ -1241,6 +1251,113 @@
     render();
   }
 
+  // --- Drag and Drop ---
+  let draggedTaskId = null;
+
+  function handleDragStart(e) {
+    const taskItem = e.target.closest('.task-item');
+    if (!taskItem) return;
+    draggedTaskId = taskItem.dataset.id;
+    taskItem.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', draggedTaskId);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const taskItem = e.target.closest('.task-item');
+    if (!taskItem || taskItem.dataset.id === draggedTaskId) return;
+
+    const rect = taskItem.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+
+    // Remove existing drop indicators
+    dom.taskList.querySelectorAll('.drop-above, .drop-below').forEach(el => {
+      el.classList.remove('drop-above', 'drop-below');
+    });
+
+    if (e.clientY < midY) {
+      taskItem.classList.add('drop-above');
+    } else {
+      taskItem.classList.add('drop-below');
+    }
+  }
+
+  function handleDragEnd(e) {
+    const taskItem = e.target.closest('.task-item');
+    if (taskItem) taskItem.classList.remove('dragging');
+    dom.taskList.querySelectorAll('.drop-above, .drop-below').forEach(el => {
+      el.classList.remove('drop-above', 'drop-below');
+    });
+    draggedTaskId = null;
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    const targetItem = e.target.closest('.task-item');
+    if (!targetItem || !draggedTaskId || targetItem.dataset.id === draggedTaskId) {
+      handleDragEnd(e);
+      return;
+    }
+
+    const rect = targetItem.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    const insertBefore = e.clientY < midY;
+
+    reorderTask(draggedTaskId, targetItem.dataset.id, insertBefore);
+    handleDragEnd(e);
+  }
+
+  function reorderTask(draggedId, targetId, insertBefore) {
+    // Get current visible tasks in order
+    const displayDate = currentView === 'today' ? viewDate : new Date();
+    const visibleTasks = getTasksForSelectedDay(displayDate);
+    const visibleIds = visibleTasks.map(t => t.id);
+
+    // Find positions
+    const draggedIndex = visibleIds.indexOf(draggedId);
+    const targetIndex = visibleIds.indexOf(targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    // Calculate new order values
+    let newOrder;
+    const targetTask = state.tasks.find(t => t.id === targetId);
+    const targetOrder = targetTask.order || 0;
+
+    if (insertBefore) {
+      // Find task before target
+      const prevIndex = targetIndex - 1;
+      if (prevIndex >= 0) {
+        const prevTask = state.tasks.find(t => t.id === visibleIds[prevIndex]);
+        const prevOrder = prevTask.order || 0;
+        newOrder = (prevOrder + targetOrder) / 2;
+      } else {
+        newOrder = targetOrder - 1;
+      }
+    } else {
+      // Find task after target
+      const nextIndex = targetIndex + 1;
+      if (nextIndex < visibleIds.length) {
+        const nextTask = state.tasks.find(t => t.id === visibleIds[nextIndex]);
+        const nextOrder = nextTask.order || 0;
+        newOrder = (targetOrder + nextOrder) / 2;
+      } else {
+        newOrder = targetOrder + 1;
+      }
+    }
+
+    // Update dragged task's order
+    const draggedTask = state.tasks.find(t => t.id === draggedId);
+    if (draggedTask) {
+      draggedTask.order = newOrder;
+      draggedTask.updatedAt = Date.now();
+      save();
+      scheduleSheetsSync();
+      render();
+    }
+  }
+
   // --- Event Handlers ---
   function handleTaskClick(e) {
     const checkbox = e.target.closest('.task-checkbox');
@@ -1328,6 +1445,12 @@
     dom.taskList.addEventListener('click', handleTaskClick);
     dom.taskList.addEventListener('contextmenu', handleTaskClick);
     dom.taskList.addEventListener('dblclick', handleTaskClick);
+
+    // Drag and drop for task reordering
+    dom.taskList.addEventListener('dragstart', handleDragStart);
+    dom.taskList.addEventListener('dragover', handleDragOver);
+    dom.taskList.addEventListener('dragend', handleDragEnd);
+    dom.taskList.addEventListener('drop', handleDrop);
 
     // Calendar interactions
     dom.monthDays.addEventListener('click', handleCalendarClick);
