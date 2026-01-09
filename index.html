@@ -186,17 +186,13 @@
 
         <div class="task-form-row">
           <label class="form-label">
-            <span>Context</span>
-            <select name="context" class="form-select">
-              <option value="Digital">Digital</option>
-              <option value="Riad">Riad</option>
-              <option value="Annex">Annex</option>
-              <option value="Personal">Personal</option>
-            </select>
+            <span>Project</span>
+            <input type="text" name="project" class="form-input" list="projectList" placeholder="Select or create" autocomplete="off">
+            <datalist id="projectList"></datalist>
           </label>
 
           <label class="form-label">
-            <span>Owner</span>
+            <span>Assign to</span>
             <select name="owner" class="form-select">
               <option value="Me">Me</option>
               <option value="Zahra">Zahra</option>

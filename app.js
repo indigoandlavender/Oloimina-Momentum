@@ -14,6 +14,7 @@
   // --- State ---
   let state = {
     tasks: [],
+    projects: ['Digital', 'Riad', 'Annex', 'Personal'],
     lastMovement: null,
     notifiedReminders: [],
     lastSync: null
@@ -46,6 +47,7 @@
     syncToGoogle: document.getElementById('syncToGoogle'),
     contextMenu: document.getElementById('contextMenu'),
     toastContainer: document.getElementById('toastContainer'),
+    projectList: document.getElementById('projectList'),
     viewToday: document.getElementById('viewToday'),
     viewMonth: document.getElementById('viewMonth'),
     viewWeek: document.getElementById('viewWeek'),
@@ -141,12 +143,26 @@
       try {
         const parsed = JSON.parse(stored);
         state.tasks = parsed.tasks || [];
+        state.projects = parsed.projects || ['Digital', 'Riad', 'Annex', 'Personal'];
         state.lastMovement = parsed.lastMovement || null;
         state.notifiedReminders = parsed.notifiedReminders || [];
         state.lastSync = parsed.lastSync || null;
       } catch (e) {
         console.error('Failed to load state', e);
       }
+    }
+    updateProjectList();
+  }
+
+  function updateProjectList() {
+    dom.projectList.innerHTML = state.projects.map(p => `<option value="${p}">`).join('');
+  }
+
+  function addProject(name) {
+    if (name && !state.projects.includes(name)) {
+      state.projects.push(name);
+      save();
+      updateProjectList();
     }
   }
 
@@ -373,7 +389,7 @@
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       title: event.summary || 'Untitled',
       note: (event.description || '').replace('[Oloimina]', '').trim(),
-      context: event.location || 'Digital',
+      project: event.location || 'General',
       owner: 'Me',
       state: 'Active',
       startDate: startDate,
@@ -513,7 +529,7 @@
     const event = {
       summary: task.title,
       description: (task.note || '') + '\n\n[Oloimina]',
-      location: task.context
+      location: task.project || task.context || ''
     };
 
     // Set start/end times
@@ -603,7 +619,7 @@
   }
 
   // --- Google Sheets Sync ---
-  const SHEET_HEADERS = ['id', 'title', 'note', 'context', 'owner', 'assignedBy', 'state', 'startDate', 'startTime', 'endDate', 'endTime', 'repeat', 'reminder', 'syncToGoogle', 'googleEventId', 'createdAt', 'updatedAt'];
+  const SHEET_HEADERS = ['id', 'title', 'note', 'project', 'owner', 'assignedBy', 'state', 'startDate', 'startTime', 'endDate', 'endTime', 'repeat', 'reminder', 'syncToGoogle', 'googleEventId', 'createdAt', 'updatedAt'];
 
   async function initSheet() {
     if (!CONFIG.GOOGLE_SHEETS_ID || CONFIG.GOOGLE_SHEETS_ID === 'YOUR_SPREADSHEET_ID') {
@@ -661,7 +677,7 @@
         id: row[0] || '',
         title: row[1] || '',
         note: row[2] || '',
-        context: row[3] || 'Digital',
+        project: row[3] || 'General',
         owner: row[4] || 'Me',
         assignedBy: row[5] || 'Me',
         state: row[6] || 'Active',
@@ -680,6 +696,11 @@
       // Merge with local tasks - sheet is source of truth
       const sheetTaskIds = new Set(sheetTasks.map(t => t.id));
       const localOnlyTasks = state.tasks.filter(t => !sheetTaskIds.has(t.id));
+
+      // Collect projects from imported tasks
+      sheetTasks.forEach(t => {
+        if (t.project) addProject(t.project);
+      });
 
       // Keep local tasks that don't exist in sheet (newly created offline)
       state.tasks = [...sheetTasks];
@@ -719,7 +740,7 @@
         task.id,
         task.title,
         task.note || '',
-        task.context || 'Digital',
+        task.project || task.context || 'General',
         task.owner || 'Me',
         task.assignedBy || 'Me',
         task.state || 'Active',
@@ -770,11 +791,14 @@
 
   // --- Task Operations ---
   function createTask(data) {
+    const project = (data.project || '').trim() || 'General';
+    addProject(project);
+
     const task = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       title: data.title.trim(),
       note: (data.note || '').trim(),
-      context: data.context || 'Digital',
+      project: project,
       owner: data.owner || 'Me',
       assignedBy: getCurrentUserShortName(),
       state: 'Active',
@@ -1000,7 +1024,8 @@
     const stateClass = task.state.toLowerCase();
     const syncedClass = task.googleEventId ? 'synced' : '';
     const isChecked = task.state === 'Done';
-    const meta = [task.context];
+    const meta = [];
+    if (task.project || task.context) meta.push(task.project || task.context);
     if (task.owner !== 'Me') meta.push('→ ' + task.owner);
     if (task.assignedBy && task.assignedBy !== 'Me' && task.assignedBy !== getCurrentUserShortName()) {
       meta.push('from ' + task.assignedBy);
@@ -1115,7 +1140,7 @@
               tasks.map(t => `
                 <div class="agenda-task" data-id="${t.id}">
                   <div class="agenda-task-title">${escapeHtml(t.title)}</div>
-                  <div class="agenda-task-meta">${t.startTime ? formatTime(t.startTime) + ' · ' : ''}${t.context}${t.owner !== 'Me' ? ' · ' + t.owner : ''}</div>
+                  <div class="agenda-task-meta">${t.startTime ? formatTime(t.startTime) + ' · ' : ''}${t.project || t.context || ''}${t.owner !== 'Me' ? ' · ' + t.owner : ''}</div>
                 </div>
               `).join('')}
           </div>
@@ -1141,6 +1166,7 @@
   function openModal(task = null) {
     editingTaskId = task ? task.id : null;
     dom.taskForm.reset();
+    updateProjectList();
 
     if (task) {
       dom.taskForm.title.value = task.title;
@@ -1151,7 +1177,7 @@
       dom.taskForm.endTime.value = task.endTime || '';
       dom.taskForm.repeat.value = task.repeat || 'none';
       dom.taskForm.reminder.value = task.reminder || 'none';
-      dom.taskForm.context.value = task.context;
+      dom.taskForm.project.value = task.project || task.context || '';
       dom.taskForm.owner.value = task.owner;
       dom.syncToGoogle.checked = task.syncToGoogle || !!task.googleEventId;
     } else {
@@ -1179,7 +1205,7 @@
       endTime: fd.get('endTime') || null,
       repeat: fd.get('repeat'),
       reminder: fd.get('reminder'),
-      context: fd.get('context'),
+      project: fd.get('project'),
       owner: fd.get('owner'),
       syncToGoogle: dom.syncToGoogle.checked
     };
