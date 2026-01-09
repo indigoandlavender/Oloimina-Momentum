@@ -180,6 +180,12 @@ body {
   color: var(--fg-70);
 }
 
+.day-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
 .add-task-btn {
   width: 26px;
   height: 26px;

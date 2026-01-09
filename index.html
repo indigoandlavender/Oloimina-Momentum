@@ -40,7 +40,19 @@
       <!-- Today View -->
       <section class="view view-today active" id="viewToday">
         <div class="view-header">
-          <h1 id="todayDate"></h1>
+          <div class="day-nav">
+            <button class="cal-nav-btn" id="dayPrev">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
+            </button>
+            <h1 id="todayDate"></h1>
+            <button class="cal-nav-btn" id="dayNext">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
           <button class="add-task-btn" id="addTaskBtn" aria-label="Add task">+</button>
         </div>
         <ul class="task-list" id="taskList"></ul>

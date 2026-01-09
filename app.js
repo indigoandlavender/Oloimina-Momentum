@@ -28,6 +28,8 @@
   let gisInited = false;
   let isSignedIn = false;
   let accessToken = null;
+  let currentUserEmail = null;
+  let currentUserName = null;
 
   // --- DOM References ---
   const dom = {
@@ -48,6 +50,8 @@
     viewMonth: document.getElementById('viewMonth'),
     viewWeek: document.getElementById('viewWeek'),
     viewAgenda: document.getElementById('viewAgenda'),
+    dayPrev: document.getElementById('dayPrev'),
+    dayNext: document.getElementById('dayNext'),
     monthTitle: document.getElementById('monthTitle'),
     monthDays: document.getElementById('monthDays'),
     monthPrev: document.getElementById('monthPrev'),
@@ -183,8 +187,12 @@
           }
           accessToken = response.access_token;
           isSignedIn = true;
+
+          // Get user info
+          await fetchUserInfo();
+
           updateAuthUI();
-          showToast('Signed in to Google', 'success');
+          showToast('Signed in as ' + (currentUserName || currentUserEmail), 'success');
 
           // Auto-sync from sheets on sign in
           if (CONFIG.GOOGLE_SHEETS_ID && CONFIG.GOOGLE_SHEETS_ID !== 'YOUR_SPREADSHEET_ID') {
@@ -206,13 +214,36 @@
 
   function updateAuthUI() {
     if (isSignedIn) {
-      dom.googleBtnText.textContent = 'Connected';
+      dom.googleBtnText.textContent = currentUserName || 'Connected';
       dom.googleBtn.classList.add('signed-in');
       dom.syncBtn.disabled = false;
     } else {
       dom.googleBtnText.textContent = 'Sign in';
       dom.googleBtn.classList.remove('signed-in');
+      currentUserEmail = null;
+      currentUserName = null;
     }
+  }
+
+  async function fetchUserInfo() {
+    try {
+      const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const data = await response.json();
+      currentUserEmail = data.email;
+      currentUserName = data.given_name || data.name || data.email.split('@')[0];
+    } catch (error) {
+      console.error('Failed to fetch user info:', error);
+    }
+  }
+
+  function getCurrentUserShortName() {
+    if (!currentUserEmail) return 'Me';
+    // Map known emails to short names
+    const email = currentUserEmail.toLowerCase();
+    if (email.includes('zahra')) return 'Zahra';
+    return currentUserName || 'Me';
   }
 
   function handleGoogleSignIn() {
@@ -572,7 +603,7 @@
   }
 
   // --- Google Sheets Sync ---
-  const SHEET_HEADERS = ['id', 'title', 'note', 'context', 'owner', 'state', 'startDate', 'startTime', 'endDate', 'endTime', 'repeat', 'reminder', 'syncToGoogle', 'googleEventId', 'createdAt', 'updatedAt'];
+  const SHEET_HEADERS = ['id', 'title', 'note', 'context', 'owner', 'assignedBy', 'state', 'startDate', 'startTime', 'endDate', 'endTime', 'repeat', 'reminder', 'syncToGoogle', 'googleEventId', 'createdAt', 'updatedAt'];
 
   async function initSheet() {
     if (!CONFIG.GOOGLE_SHEETS_ID || CONFIG.GOOGLE_SHEETS_ID === 'YOUR_SPREADSHEET_ID') {
@@ -583,7 +614,7 @@
       // Check if sheet has headers
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: CONFIG.GOOGLE_SHEETS_ID,
-        range: 'A1:P1'
+        range: 'A1:Q1'
       });
 
       const values = response.result.values;
@@ -591,7 +622,7 @@
         // Initialize headers
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: CONFIG.GOOGLE_SHEETS_ID,
-          range: 'A1:P1',
+          range: 'A1:Q1',
           valueInputOption: 'RAW',
           resource: { values: [SHEET_HEADERS] }
         });
@@ -615,7 +646,7 @@
 
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: CONFIG.GOOGLE_SHEETS_ID,
-        range: 'A2:P1000'
+        range: 'A2:Q1000'
       });
 
       const rows = response.result.values || [];
@@ -632,17 +663,18 @@
         note: row[2] || '',
         context: row[3] || 'Digital',
         owner: row[4] || 'Me',
-        state: row[5] || 'Active',
-        startDate: row[6] || null,
-        startTime: row[7] || null,
-        endDate: row[8] || null,
-        endTime: row[9] || null,
-        repeat: row[10] || 'none',
-        reminder: row[11] || 'none',
-        syncToGoogle: row[12] === 'true',
-        googleEventId: row[13] || null,
-        createdAt: parseInt(row[14]) || Date.now(),
-        updatedAt: parseInt(row[15]) || Date.now()
+        assignedBy: row[5] || 'Me',
+        state: row[6] || 'Active',
+        startDate: row[7] || null,
+        startTime: row[8] || null,
+        endDate: row[9] || null,
+        endTime: row[10] || null,
+        repeat: row[11] || 'none',
+        reminder: row[12] || 'none',
+        syncToGoogle: row[13] === 'true',
+        googleEventId: row[14] || null,
+        createdAt: parseInt(row[15]) || Date.now(),
+        updatedAt: parseInt(row[16]) || Date.now()
       })).filter(t => t.id && t.title);
 
       // Merge with local tasks - sheet is source of truth
@@ -689,6 +721,7 @@
         task.note || '',
         task.context || 'Digital',
         task.owner || 'Me',
+        task.assignedBy || 'Me',
         task.state || 'Active',
         task.startDate || '',
         task.startTime || '',
@@ -705,13 +738,13 @@
       // Clear existing data and write new
       await gapi.client.sheets.spreadsheets.values.clear({
         spreadsheetId: CONFIG.GOOGLE_SHEETS_ID,
-        range: 'A2:P1000'
+        range: 'A2:Q1000'
       });
 
       if (rows.length > 0) {
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: CONFIG.GOOGLE_SHEETS_ID,
-          range: 'A2:P' + (rows.length + 1),
+          range: 'A2:Q' + (rows.length + 1),
           valueInputOption: 'RAW',
           resource: { values: rows }
         });
@@ -743,6 +776,7 @@
       note: (data.note || '').trim(),
       context: data.context || 'Digital',
       owner: data.owner || 'Me',
+      assignedBy: getCurrentUserShortName(),
       state: 'Active',
       startDate: data.startDate || formatDate(new Date()),
       startTime: data.startTime || null,
@@ -935,8 +969,31 @@
   }
 
   function renderToday() {
-    dom.todayDate.textContent = formatDisplayDate(new Date());
-    dom.taskList.innerHTML = getTodayTasks().map(taskHTML).join('');
+    const displayDate = currentView === 'today' ? viewDate : new Date();
+    dom.todayDate.textContent = formatDisplayDate(displayDate);
+    dom.taskList.innerHTML = getTasksForSelectedDay(displayDate).map(taskHTML).join('');
+  }
+
+  function getTasksForSelectedDay(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return state.tasks.filter(task => {
+      if (task.state === 'Done' || task.state === 'Parked') return false;
+      const start = parseDate(task.startDate);
+      if (!start) return isSameDay(d, today); // Tasks without date only show on actual today
+      if (task.repeat !== 'none') return isTaskOnDate(task, d);
+      // For past dates, show tasks that started on or before that date and aren't done
+      // For today/future, show tasks that start on or before that date
+      return start <= d;
+    }).sort((a, b) => {
+      if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
+      if (a.startTime) return -1;
+      if (b.startTime) return 1;
+      return 0;
+    });
   }
 
   function taskHTML(task) {
@@ -944,7 +1001,10 @@
     const syncedClass = task.googleEventId ? 'synced' : '';
     const isChecked = task.state === 'Done';
     const meta = [task.context];
-    if (task.owner !== 'Me') meta.push(task.owner);
+    if (task.owner !== 'Me') meta.push('→ ' + task.owner);
+    if (task.assignedBy && task.assignedBy !== 'Me' && task.assignedBy !== getCurrentUserShortName()) {
+      meta.push('from ' + task.assignedBy);
+    }
     if (task.repeat !== 'none') meta.push(getRepeatLabel(task.repeat));
 
     let timeStr = '';
@@ -1249,6 +1309,8 @@
     dom.agendaList.addEventListener('click', handleCalendarClick);
 
     // Calendar navigation
+    dom.dayPrev.addEventListener('click', () => { viewDate.setDate(viewDate.getDate() - 1); render(); });
+    dom.dayNext.addEventListener('click', () => { viewDate.setDate(viewDate.getDate() + 1); render(); });
     dom.monthPrev.addEventListener('click', () => { viewDate.setMonth(viewDate.getMonth() - 1); render(); });
     dom.monthNext.addEventListener('click', () => { viewDate.setMonth(viewDate.getMonth() + 1); render(); });
     dom.weekPrev.addEventListener('click', () => { viewDate.setDate(viewDate.getDate() - 7); render(); });
