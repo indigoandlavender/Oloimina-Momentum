@@ -66,7 +66,13 @@
     agendaList: document.getElementById('agendaList'),
     agendaPrev: document.getElementById('agendaPrev'),
     agendaNext: document.getElementById('agendaNext'),
-    navBtns: document.querySelectorAll('.nav-btn')
+    navBtns: document.querySelectorAll('.nav-btn'),
+    manageProjectsBtn: document.getElementById('manageProjectsBtn'),
+    projectManager: document.getElementById('projectManager'),
+    projectManagerList: document.getElementById('projectManagerList'),
+    closeProjectManager: document.getElementById('closeProjectManager'),
+    newProjectInput: document.getElementById('newProjectInput'),
+    addProjectBtn: document.getElementById('addProjectBtn')
   };
 
   // --- Toast Notifications ---
@@ -163,6 +169,44 @@
       state.projects.push(name);
       save();
       updateProjectList();
+      renderProjectManager();
+    }
+  }
+
+  function deleteProject(name) {
+    const index = state.projects.indexOf(name);
+    if (index > -1) {
+      state.projects.splice(index, 1);
+      save();
+      updateProjectList();
+      renderProjectManager();
+      scheduleSheetsSync();
+    }
+  }
+
+  function getProjectTaskCount(projectName) {
+    return state.tasks.filter(t => (t.project || t.context) === projectName && t.state !== 'Done').length;
+  }
+
+  function renderProjectManager() {
+    if (!dom.projectManagerList) return;
+    dom.projectManagerList.innerHTML = state.projects.map(project => {
+      const count = getProjectTaskCount(project);
+      return `
+        <li class="project-manager-item" data-project="${project}">
+          <span>${project}<span class="task-count">(${count})</span></span>
+          <button type="button" class="project-delete-btn" data-project="${project}" title="Delete project">×</button>
+        </li>
+      `;
+    }).join('');
+  }
+
+  function toggleProjectManager(show) {
+    if (dom.projectManager) {
+      dom.projectManager.classList.toggle('active', show);
+      if (show) {
+        renderProjectManager();
+      }
     }
   }
 
@@ -1208,6 +1252,7 @@
   function closeModal() {
     dom.taskModal.close();
     editingTaskId = null;
+    toggleProjectManager(false);
   }
 
   function getFormData() {
@@ -1442,6 +1487,40 @@
     dom.addTaskBtn.addEventListener('click', () => openModal());
     dom.cancelBtn.addEventListener('click', closeModal);
     dom.taskForm.addEventListener('submit', handleFormSubmit);
+
+    // Project manager
+    dom.manageProjectsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleProjectManager(!dom.projectManager.classList.contains('active'));
+    });
+    dom.closeProjectManager.addEventListener('click', () => toggleProjectManager(false));
+    dom.addProjectBtn.addEventListener('click', () => {
+      const name = dom.newProjectInput.value.trim();
+      if (name) {
+        addProject(name);
+        dom.newProjectInput.value = '';
+      }
+    });
+    dom.newProjectInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const name = dom.newProjectInput.value.trim();
+        if (name) {
+          addProject(name);
+          dom.newProjectInput.value = '';
+        }
+      }
+    });
+    dom.projectManagerList.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('.project-delete-btn');
+      if (deleteBtn) {
+        const projectName = deleteBtn.dataset.project;
+        if (confirm(`Delete project "${projectName}"? Tasks will keep this project name.`)) {
+          deleteProject(projectName);
+        }
+      }
+    });
 
     // Google sync
     dom.googleBtn.addEventListener('click', handleGoogleSignIn);

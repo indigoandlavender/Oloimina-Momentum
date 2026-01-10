@@ -186,7 +186,7 @@
 
         <div class="task-form-row">
           <label class="form-label">
-            <span>Project</span>
+            <span>Project <button type="button" class="manage-projects-btn" id="manageProjectsBtn" title="Manage projects">⚙</button></span>
             <input type="text" name="project" class="form-input" list="projectList" placeholder="Select or create" autocomplete="off">
             <datalist id="projectList"></datalist>
           </label>
@@ -199,6 +199,19 @@
               <option value="AI">AI</option>
             </select>
           </label>
+        </div>
+
+        <!-- Project Manager Dropdown -->
+        <div class="project-manager" id="projectManager">
+          <div class="project-manager-header">
+            <span>Projects</span>
+            <button type="button" class="project-manager-close" id="closeProjectManager">×</button>
+          </div>
+          <ul class="project-manager-list" id="projectManagerList"></ul>
+          <div class="project-manager-add">
+            <input type="text" id="newProjectInput" placeholder="New project name" autocomplete="off">
+            <button type="button" id="addProjectBtn">Add</button>
+          </div>
         </div>
 
         <input type="hidden" name="id" value="">

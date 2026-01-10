@@ -665,6 +665,7 @@ body {
   display: flex;
   gap: var(--space-md);
   margin-bottom: var(--space-md);
+  position: relative;
 }
 
 .form-label {
@@ -698,6 +699,152 @@ body {
 .form-input:focus,
 .form-select:focus {
   border-color: var(--fg-30);
+}
+
+/* Project Manager */
+.manage-projects-btn {
+  background: none;
+  border: none;
+  color: var(--fg-30);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0 4px;
+  margin-left: 4px;
+  transition: color 0.15s ease;
+}
+
+.manage-projects-btn:hover {
+  color: var(--fg-70);
+}
+
+.project-manager {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg);
+  border: 1px solid var(--fg-10);
+  box-shadow: 0 4px 20px var(--shadow);
+  z-index: 100;
+  margin-top: 8px;
+}
+
+.project-manager.active {
+  display: block;
+}
+
+.project-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--fg-05);
+}
+
+.project-manager-header span {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-50);
+}
+
+.project-manager-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--fg-30);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.project-manager-close:hover {
+  color: var(--fg-70);
+}
+
+.project-manager-list {
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.project-manager-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--fg-05);
+}
+
+.project-manager-item:last-child {
+  border-bottom: none;
+}
+
+.project-manager-item span {
+  font-size: 12px;
+  color: var(--fg-70);
+}
+
+.project-manager-item .task-count {
+  font-size: 10px;
+  color: var(--fg-30);
+  margin-left: 8px;
+}
+
+.project-delete-btn {
+  background: none;
+  border: none;
+  color: var(--fg-20);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  transition: color 0.15s ease;
+}
+
+.project-delete-btn:hover {
+  color: #e74c3c;
+}
+
+.project-manager-add {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--fg-05);
+}
+
+.project-manager-add input {
+  flex: 1;
+  padding: 6px 10px;
+  font-family: var(--font);
+  font-size: 11px;
+  background: var(--card);
+  border: 1px solid var(--fg-10);
+  color: var(--fg-70);
+  outline: none;
+}
+
+.project-manager-add input:focus {
+  border-color: var(--fg-30);
+}
+
+.project-manager-add button {
+  padding: 6px 12px;
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--fg-10);
+  border: none;
+  color: var(--fg-50);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.project-manager-add button:hover {
+  background: var(--fg);
+  color: var(--bg);
 }
 
 .task-form-actions {
